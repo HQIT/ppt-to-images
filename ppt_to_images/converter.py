@@ -61,7 +61,7 @@ class PPTConverter:
         input_path: Union[str, Path, BinaryIO],
         output_dir: Optional[Union[str, Path]] = None,
         output_format: Literal["file", "base64", "both"] = "file",
-        extract_text: bool = False
+        extract_notes: bool = False
     ) -> Dict[str, Any]:
         """
         Convert PPT/PPTX/PDF to image sequence.
@@ -70,14 +70,14 @@ class PPTConverter:
             input_path: Input file path or file-like object
             output_dir: Output directory (required for "file" and "both" formats)
             output_format: Output format - "file", "base64", or "both"
-            extract_text: Whether to extract text content from slides
+            extract_notes: Whether to extract notes (备注) from slides
             
         Returns:
             Dictionary containing:
                 - images: List of file paths or base64 strings
                 - images_base64: List of base64 strings (only for "both" format)
                 - count: Number of images
-                - texts: List of text content (if extract_text=True)
+                - texts: List of notes content (if extract_notes=True)
                 - format: Output format used
                 
         Raises:
@@ -116,15 +116,15 @@ class PPTConverter:
             # Convert PDF to images
             images = self._pdf_to_images(pdf_path)
             
-            # Extract text if requested
+            # Extract notes if requested
             texts = []
-            if extract_text and file_type in (FileType.PPT, FileType.PPTX):
+            if extract_notes and file_type in (FileType.PPT, FileType.PPTX):
                 pptx_path = self._ensure_pptx(input_path, file_type, temp)
                 texts = self._extract_text(pptx_path)
             
             # Process output
             result = self._process_output(
-                images, output_dir, output_format, texts, extract_text
+                images, output_dir, output_format, texts, extract_notes
             )
             
             return result
@@ -283,13 +283,14 @@ class PPTConverter:
     
     def _extract_text(self, pptx_path: Path) -> List[str]:
         """
-        Extract text content from PPTX file.
+        Extract notes (备注) content from PPTX file.
+        Only extracts notes, not slide text content (which will be extracted via OCR later).
         
         Args:
             pptx_path: Path to PPTX file
             
         Returns:
-            List of text content per slide
+            List of notes content per slide
         """
         try:
             from pptx import Presentation
@@ -297,27 +298,24 @@ class PPTConverter:
             logger.warning("python-pptx not installed, skipping text extraction")
             return []
         
-        logger.info(f"Extracting text from: {pptx_path}")
+        logger.info(f"Extracting notes from: {pptx_path}")
         
         texts = []
         try:
             presentation = Presentation(str(pptx_path))
             
             for slide in presentation.slides:
-                text_runs = []
-                for shape in slide.shapes:
-                    if not shape.has_text_frame:
-                        continue
-                    for paragraph in shape.text_frame.paragraphs:
-                        for run in paragraph.runs:
-                            text_runs.append(run.text)
+                # Only extract notes, not slide text content
+                note = ""
+                if slide.has_notes_slide:
+                    note = slide.notes_slide.notes_text_frame.text
                 
-                texts.append('\n'.join(text_runs))
+                texts.append(note)
             
             return texts
             
         except Exception as e:
-            logger.warning(f"Text extraction failed: {e}")
+            logger.warning(f"Notes extraction failed: {e}")
             return []
     
     def _process_output(
@@ -326,7 +324,7 @@ class PPTConverter:
         output_dir: Optional[Path],
         output_format: str,
         texts: List[str],
-        extract_text: bool
+        extract_notes: bool
     ) -> Dict[str, Any]:
         """
         Process and format output.
@@ -335,8 +333,8 @@ class PPTConverter:
             images: List of PIL Image objects
             output_dir: Output directory
             output_format: Output format
-            texts: Extracted text content
-            extract_text: Whether text extraction was requested
+            texts: Extracted notes content
+            extract_notes: Whether notes extraction was requested
             
         Returns:
             Result dictionary
@@ -354,7 +352,7 @@ class PPTConverter:
             result["images"] = self._save_images(images, output_dir)
             result["images_base64"] = self._images_to_base64(images)
         
-        if extract_text:
+        if extract_notes:
             result["texts"] = texts
         
         return result

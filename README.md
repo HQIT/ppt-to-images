@@ -6,7 +6,7 @@
 
 - 支持 PPT、PPTX、PDF 三种输入格式
 - 支持文件输出、Base64 输出、或两者同时输出
-- 可选提取幻灯片文本内容
+- 可选提取幻灯片备注内容
 - 命令行工具和 Python API 两种使用方式
 - 可配置输出 DPI（分辨率）
 
@@ -85,8 +85,8 @@ ppt-to-images input.pptx -o ./images --format both
 # 设置输出 DPI（默认 200）
 ppt-to-images input.pptx -o ./images --dpi 300
 
-# 提取文本内容
-ppt-to-images input.pptx -o ./images --extract-text
+# 提取备注内容
+ppt-to-images input.pptx -o ./images --extract-notes
 
 # JSON 格式输出
 ppt-to-images input.pptx -o ./images --output-json
@@ -108,7 +108,7 @@ ppt-to-images presentation.pptx \
     -o ./output/images \
     --format both \
     --dpi 300 \
-    --extract-text \
+    --extract-notes \
     --output-json \
     -v
 ```
@@ -121,7 +121,7 @@ ppt-to-images presentation.pptx \
 | `-o, --output-dir` | 输出目录 |
 | `-f, --format` | 输出格式：file/base64/both（默认 file） |
 | `--dpi` | 图片 DPI（默认 200） |
-| `--extract-text` | 提取文本内容 |
+| `--extract-notes` | 提取备注内容 |
 | `--output-json` | JSON 格式输出 |
 | `--temp-dir` | 临时文件目录 |
 | `--keep-temp` | 保留临时文件 |
@@ -177,12 +177,12 @@ result = converter.convert(
     input_path="input.pptx",
     output_dir="./output",
     output_format="both",
-    extract_text=True
+    extract_notes=True
 )
 
 print(f"文件路径: {result['images']}")
 print(f"Base64: {result['images_base64']}")
-print(f"文本内容: {result['texts']}")
+print(f"备注内容: {result['texts']}")
 ```
 
 ### 处理 PDF 文件
@@ -218,7 +218,7 @@ converter.convert(
     input_path: str | Path,    # 输入文件路径
     output_dir: str = None,    # 输出目录
     output_format: str = "file", # 输出格式：file/base64/both
-    extract_text: bool = False   # 是否提取文本
+    extract_notes: bool = False   # 是否提取备注
 ) -> dict
 ```
 
@@ -229,7 +229,7 @@ converter.convert(
     "images": list,       # 文件路径或 Base64 列表
     "images_base64": list, # Base64 列表（仅 format="both"）
     "count": int,         # 图片数量
-    "texts": list,        # 文本内容（仅 extract_text=True）
+    "texts": list,        # 备注内容（仅 extract_notes=True）
     "format": str         # 输出格式
 }
 ```

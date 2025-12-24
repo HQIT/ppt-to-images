@@ -55,9 +55,10 @@ def main():
     )
     
     parser.add_argument(
-        "--extract-text",
+        "--extract-notes",
         action="store_true",
-        help="Extract text content from slides"
+        dest="extract_text",
+        help="Extract notes (备注) from slides"
     )
     
     # Output formatting
@@ -129,7 +130,7 @@ def main():
             input_path=input_path,
             output_dir=args.output_dir,
             output_format=args.format,
-            extract_text=args.extract_text
+            extract_notes=args.extract_text
         )
         
         # Output result
@@ -146,9 +147,9 @@ def main():
                 for i, b64 in enumerate(result["images"], 1):
                     print(f"  Page {i}: {b64[:50]}..." if len(b64) > 50 else f"  Page {i}: {b64}")
             if args.extract_text and result.get("texts"):
-                print("\nExtracted text:")
-                for i, text in enumerate(result["texts"], 1):
-                    preview = text[:100] + "..." if len(text) > 100 else text
+                print("\nExtracted notes:")
+                for i, note in enumerate(result["texts"], 1):
+                    preview = note[:100] + "..." if len(note) > 100 else note
                     print(f"  Page {i}: {preview}")
         
         logger.info("Conversion completed successfully")
