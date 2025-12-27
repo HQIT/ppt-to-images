@@ -133,6 +133,15 @@ def main():
             extract_notes=args.extract_text
         )
         
+        # Save notes to individual files if extracted
+        if args.extract_text and result.get("texts") and args.output_dir:
+            output_path = Path(args.output_dir)
+            for i, note in enumerate(result["texts"], 1):
+                note_file = output_path / f"{i}.txt"
+                with open(note_file, "w", encoding="utf-8") as f:
+                    f.write(note)
+            logger.info(f"Notes saved to: {args.output_dir}/{{1..{len(result['texts'])}}}.txt")
+        
         # Output result
         if args.output_json:
             print(json.dumps(result, indent=2, ensure_ascii=False))
